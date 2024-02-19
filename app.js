@@ -1,3 +1,6 @@
+import * as PIXI from 'pixi.js';
+import '@pixi/graphics-extras';
+
 const Application = PIXI.Application;
 const Graphics = PIXI.Graphics;
 
