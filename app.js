@@ -80,7 +80,7 @@ const style = new PIXI.TextStyle({
 const myText = new PIXI.Text('Hello World!', style);
 app.stage.addChild(myText);
 
-myText.text = 'Hello Text Changed';
+myText.text = 'HEHE HUSEYIN';
 myText.style.wordWrap = true;
 myText.style.wordWrapWidth = 100;
 myText.style.align = 'center';
