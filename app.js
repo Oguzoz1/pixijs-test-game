@@ -41,7 +41,6 @@ moon.filters = [blurFilter];
 //Create an array of gameobjects (GameObject class=) to create an array and set anchor etc for all of them.
 
 
-app.stage.addChild(moon);
 
 //TEXT:
 
@@ -65,6 +64,17 @@ myText.anchor.set(0.5);
 myText.position.set(appMiddle.x,appMiddle.y);
 myText.skew.set(0.2,0);
 
+
+const textBackground = new Graphics();
+textBackground.beginFill(0xFFFFFF)
+.drawRect(appMiddle.x / 2, appMiddle.y - 50, 1000, 100)
+.endFill();
+
+
+
+
+app.stage.addChild(moon);
+app.stage.addChild(textBackground);
 app.stage.addChild(myText);
 
 
