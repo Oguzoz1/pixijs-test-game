@@ -6,8 +6,7 @@ const Application = PIXI.Application;
 const Graphics = PIXI.Graphics;
 
 const app = new Application({
-    width: 600,
-    height: 600,
+    resizeTo: window,
     backgroundAlpha: 1,
     antialias: true
 });
@@ -24,6 +23,7 @@ app.ticker.add(delta => Update(delta));
 function Update(delta){
     const value = Math.random() * 0xFFFFFF;
   
+    starsSprite.tilePosition.x += 0.2;
 }
 const appMiddle = {
     x: app.screen.width * 0.5,
@@ -33,7 +33,7 @@ const appMiddle = {
 const moon = PIXI.Sprite.from('./Assets/moon.png')
 moon.anchor.set(0.5);
 moon.position.set(appMiddle.x,appMiddle.y);
-moon.scale.set(2,2);
+moon.scale.set(1,1);
 
 const blurFilter = new PIXI.BlurFilter(3);
 moon.filters = [blurFilter];
@@ -51,7 +51,7 @@ const style = new PIXI.TextStyle({
     dropShadowBlur: 3,
     dropShadowColor: "#500d87",
     fontFamily: "Courier New",
-    fontSize: 110,
+    fontSize: 55,
     letterSpacing: 5,
     lineJoin: "bevel",
     miterLimit: 8,
@@ -67,12 +67,18 @@ myText.skew.set(0.2,0);
 
 const textBackground = new Graphics();
 textBackground.beginFill(0xFFFFFF)
-.drawRect(appMiddle.x / 2, appMiddle.y - 50, 1000, 100)
+.drawRect(appMiddle.x - 250, appMiddle.y - 25, 500, 50)
 .endFill();
 
+const starsBGTexture = PIXI.Texture.from('./Assets/bgblack.png')
+const starsSprite = new PIXI.TilingSprite(
+    starsBGTexture,
+    app.screen.width,
+    app.screen.height,
+);
+starsSprite.tileScale.set(0.5,0.5);
 
-
-
+app.stage.addChild(starsSprite);
 app.stage.addChild(moon);
 app.stage.addChild(textBackground);
 app.stage.addChild(myText);
