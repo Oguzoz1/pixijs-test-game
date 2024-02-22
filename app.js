@@ -44,7 +44,7 @@ const app = new Application({
     antialias: true
 });
 //Overall Variables:
-const deltaTime = app.ticker.deltaTime;
+let deltaTime = app.ticker.deltaTime;
 const appMiddle = {x: app.screen.width * 0.5,y: app.screen.height * 0.5}
 //Sprite References:
 const moon = PIXI.Sprite.from('./Assets/moon.png')
@@ -102,7 +102,7 @@ const myText = new PIXI.Text('STUDIO AERIA', style);
 myText.anchor.set(0.5);
 myText.position.set(appMiddle.x,appMiddle.y);
 myText.skew.set(0.2,0);
-
+//TO-DO:Move the text slightly a bit upward and reset it.
 //ACTIONS: TICK -> new file?
 app.ticker.add((delta) => Actions.tick(delta/60));
 myText.eventMode = 'static';
@@ -144,7 +144,6 @@ app.stage.addEventListener('pointermove', (e) => {
 });
 
 //MOON ANIMATION:
-
 const moonMoveSpeed = 0.2;
 function moveTowardsMouseOnPointerMove(e){
     const distanceVector = getDistanceVector(moon.position,e.global);
