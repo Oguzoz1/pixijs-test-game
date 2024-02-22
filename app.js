@@ -1,20 +1,27 @@
 import * as PIXI from 'pixi.js';
 import '@pixi/graphics-extras';
-import { ObservablePoint } from 'pixi.js';
-///GLOBAL FUNC
+import '@pixi/math-extras';
+import { Actions, Interpolations} from 'pixi-actions';
+//Create an array of gameobjects (GameObject class=) to create an array and set anchor etc for all of them.
+
+//#region VECTOR FUNCTIONS
 function Vector2(x,y){
     this.x = x;
     this.y = y;
-}
+
+    function Lerp(targetVector, destinationVector, time){
+        
+    }
+} 
 Vector2.prototype.magnitude = function(){
     return Math.sqrt(this.x * this.x + this.y * this.y);
 }
 Vector2.prototype.normalized = function(){
     const magn = this.magnitude();
     const result = new Vector2(this.x / magn, this.y / magn);
-
     return result;
 }
+
 function getDistanceVector(from, to){
     const distanceVector = {
         x: to.x - from.x,
@@ -25,63 +32,57 @@ function getDistanceVector(from, to){
 
 //ADD .Move (Move objects from one vector to another)
 
-///
+//#endregion
+//#region GLOBALLY USED VARIABLES
 
+//Main References
 const Application = PIXI.Application;
 const Graphics = PIXI.Graphics;
-
 const app = new Application({
     resizeTo: window,
     backgroundAlpha: 1,
     antialias: true
 });
+//Overall Variables:
+const deltaTime = app.ticker.deltaTime;
+const appMiddle = {x: app.screen.width * 0.5,y: app.screen.height * 0.5}
+//Sprite References:
+const moon = PIXI.Sprite.from('./Assets/moon.png')
+const starsBGTexture = PIXI.Texture.from('./Assets/bgblack.png')
+const starsSprite = new PIXI.TilingSprite(starsBGTexture,app.screen.width,app.screen.height);
 
+//#endregion
+
+//App Settings
 app.renderer.background.color = 0x000000;
 app.renderer.resize(window.innerWidth,window.innerHeight);
 app.renderer.view.style.position = 'absolute';
-
 document.body.appendChild(app.view);
 
-//Update Method
+//UPDATE:
 app.ticker.add(delta => Update(delta));
-
 function Update(delta){ 
     UpdateBackground();
     moonBackToOriginalPos();
 }
 
+//Update Methods:
 function UpdateBackground(){
     starsSprite.tilePosition.x += 0.05;
 }
 
 
-const appMiddle = {
-    x: app.screen.width * 0.5,
-    y: app.screen.height * 0.5
-}
 
+//Sprite Settings:
+const blurFilter = new PIXI.BlurFilter(3);
 
-
-//Create an array of gameobjects (GameObject class=) to create an array and set anchor etc for all of them.
-
-//SPRITES:
-
-const moon = PIXI.Sprite.from('./Assets/moon.png')
 moon.anchor.set(0.5);
 moon.position.set(appMiddle.x,appMiddle.y);
 moon.scale.set(1,1);
-const blurFilter = new PIXI.BlurFilter(3);
 moon.filters = [blurFilter];
-
-const starsBGTexture = PIXI.Texture.from('./Assets/bgblack.png')
-const starsSprite = new PIXI.TilingSprite(
-    starsBGTexture,
-    app.screen.width,
-    app.screen.height,
-);
 starsSprite.tileScale.set(0.8,0.8);
 
-//TEXT:
+//TEXT Settings:
 const style = new PIXI.TextStyle({
     dropShadow: true,
     dropShadowAlpha: 0.4,
@@ -96,11 +97,35 @@ const style = new PIXI.TextStyle({
     stroke: "#98108d",
     strokeThickness: 1
 });
-
 const myText = new PIXI.Text('STUDIO AERIA', style);
+
 myText.anchor.set(0.5);
 myText.position.set(appMiddle.x,appMiddle.y);
 myText.skew.set(0.2,0);
+
+//ACTIONS: TICK -> new file?
+app.ticker.add((delta) => Actions.tick(delta/60));
+myText.eventMode = 'static';
+myText.on('pointerover', textOnPointOver);
+myText.on('pointerout', textOnPointOut);
+myText.on('pointerdown', textOnPointDown);
+myText.on('pointerup', textOnPointUp);
+
+function textOnPointOver(){
+    Actions.scaleTo(myText, 1.1, 1.1, 0.2, Interpolations.linear).play();
+}
+
+function textOnPointOut(){
+    Actions.scaleTo(myText, 1, 1, 0.2, Interpolations.linear).play();
+}
+
+function textOnPointDown(){
+    this.alpha = 0.5;
+}
+
+function textOnPointUp(){
+    this.alpha = 1;
+}
 
 //GRAPHICS:
 const textBackground = new Graphics();
@@ -118,17 +143,16 @@ app.stage.addEventListener('pointermove', (e) => {
     moveTowardsMouseOnPointerMove(e);
 });
 
-const moonMoveSpeed = 0.1;
-function moveTowardsMouseOnPointerMove(e){
-    //Calculate Distance vector from moon to pointerpos.
-    const distanceVector = getDistanceVector(moon.position,e.global);
-    //Normalize the distance vector. (It gives us direction)
-    const dir = distanceVector.normalized();
-    //Speed of moon moving towards the mouse.
+//MOON ANIMATION:
 
-    //MOVE IT TO MOUSE MOVEMENT DIRECTION
-    moon.position.x += dir.x * moonMoveSpeed * 2; 
-    moon.position.y += dir.y * moonMoveSpeed * 2;
+const moonMoveSpeed = 0.2;
+function moveTowardsMouseOnPointerMove(e){
+    const distanceVector = getDistanceVector(moon.position,e.global);
+    const dir = distanceVector.normalized();
+
+    //TODO: MOVE IT TO MOUSE MOVEMENT DIRECTION
+    moon.position.x += dir.x * moonMoveSpeed * 2.5; 
+    moon.position.y += dir.y * moonMoveSpeed * 2.5;
 
     //We need to set boundaries of movement
 }
@@ -137,9 +161,10 @@ function moonBackToOriginalPos(){
     const distance = getDistanceVector(appMiddle, moon.position);
     const dir = distance.normalized();
     
+    //If moon is not in the middle of the screen:
     if (moon.position.x !== appMiddle.x && moon.position.y !== appMiddle.y ){
-        moon.position.x += -dir.x * moonMoveSpeed / 2;
-        moon.position.y += -dir.y * moonMoveSpeed / 2;
+        moon.position.x += -dir.x * moonMoveSpeed;
+        moon.position.y += -dir.y * moonMoveSpeed;
     }
 
 }
@@ -158,10 +183,7 @@ function moonBackToOriginalPos(){
 
 
 
-
-
-
-
+//#region Code Dictionary
 
 // const rectangle = new Graphics();
 // rectangle.beginFill(0xAA33BB)
@@ -284,4 +306,4 @@ function moonBackToOriginalPos(){
 //     app.stage.addChild(char3);
 // }
 
-
+//#endregion

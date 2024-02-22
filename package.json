@@ -12,6 +12,8 @@
   "license": "ISC",
   "dependencies": {
     "@pixi/graphics-extras": "^7.4.0",
+    "@pixi/math-extras": "^7.4.0",
+    "pixi-actions": "^1.1.10",
     "pixi.js": "^7.4.0"
   },
   "devDependencies": {
