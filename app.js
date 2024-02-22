@@ -1,6 +1,31 @@
 import * as PIXI from 'pixi.js';
 import '@pixi/graphics-extras';
 import { ObservablePoint } from 'pixi.js';
+///GLOBAL FUNC
+function Vector2(x,y){
+    this.x = x;
+    this.y = y;
+}
+Vector2.prototype.magnitude = function(){
+    return Math.sqrt(this.x * this.x + this.y * this.y);
+}
+Vector2.prototype.normalized = function(){
+    const magn = this.magnitude();
+    const result = new Vector2(this.x / magn, this.y / magn);
+
+    return result;
+}
+function getDistanceVector(from, to){
+    const distanceVector = {
+        x: to.x - from.x,
+        y: to.y - from.y
+    }
+    return new Vector2(distanceVector.x, distanceVector.y);
+}
+
+//ADD .Move (Move objects from one vector to another)
+
+///
 
 const Application = PIXI.Application;
 const Graphics = PIXI.Graphics;
@@ -20,30 +45,43 @@ document.body.appendChild(app.view);
 //Update Method
 app.ticker.add(delta => Update(delta));
 
-function Update(delta){
-    const value = Math.random() * 0xFFFFFF;
-  
-    starsSprite.tilePosition.x += 0.2;
+function Update(delta){ 
+    UpdateBackground();
+    moonBackToOriginalPos();
 }
+
+function UpdateBackground(){
+    starsSprite.tilePosition.x += 0.05;
+}
+
+
 const appMiddle = {
     x: app.screen.width * 0.5,
     y: app.screen.height * 0.5
 }
 
+
+
+//Create an array of gameobjects (GameObject class=) to create an array and set anchor etc for all of them.
+
+//SPRITES:
+
 const moon = PIXI.Sprite.from('./Assets/moon.png')
 moon.anchor.set(0.5);
 moon.position.set(appMiddle.x,appMiddle.y);
 moon.scale.set(1,1);
-
 const blurFilter = new PIXI.BlurFilter(3);
 moon.filters = [blurFilter];
 
-//Create an array of gameobjects (GameObject class=) to create an array and set anchor etc for all of them.
-
-
+const starsBGTexture = PIXI.Texture.from('./Assets/bgblack.png')
+const starsSprite = new PIXI.TilingSprite(
+    starsBGTexture,
+    app.screen.width,
+    app.screen.height,
+);
+starsSprite.tileScale.set(0.8,0.8);
 
 //TEXT:
-
 const style = new PIXI.TextStyle({
     dropShadow: true,
     dropShadowAlpha: 0.4,
@@ -64,30 +102,47 @@ myText.anchor.set(0.5);
 myText.position.set(appMiddle.x,appMiddle.y);
 myText.skew.set(0.2,0);
 
-
+//GRAPHICS:
 const textBackground = new Graphics();
 textBackground.beginFill(0xFFFFFF)
 .drawRect(appMiddle.x - 250, appMiddle.y - 25, 500, 50)
 .endFill();
-
-const starsBGTexture = PIXI.Texture.from('./Assets/bgblack.png')
-const starsSprite = new PIXI.TilingSprite(
-    starsBGTexture,
-    app.screen.width,
-    app.screen.height,
-);
-starsSprite.tileScale.set(0.5,0.5);
 
 app.stage.addChild(starsSprite);
 app.stage.addChild(moon);
 app.stage.addChild(textBackground);
 app.stage.addChild(myText);
 
+app.stage.eventMode = 'static';
+app.stage.addEventListener('pointermove', (e) => {
+    moveTowardsMouseOnPointerMove(e);
+});
 
+const moonMoveSpeed = 0.1;
+function moveTowardsMouseOnPointerMove(e){
+    //Calculate Distance vector from moon to pointerpos.
+    const distanceVector = getDistanceVector(moon.position,e.global);
+    //Normalize the distance vector. (It gives us direction)
+    const dir = distanceVector.normalized();
+    //Speed of moon moving towards the mouse.
 
+    //MOVE IT TO MOUSE MOVEMENT DIRECTION
+    moon.position.x += dir.x * moonMoveSpeed * 2; 
+    moon.position.y += dir.y * moonMoveSpeed * 2;
 
+    //We need to set boundaries of movement
+}
 
+function moonBackToOriginalPos(){
+    const distance = getDistanceVector(appMiddle, moon.position);
+    const dir = distance.normalized();
+    
+    if (moon.position.x !== appMiddle.x && moon.position.y !== appMiddle.y ){
+        moon.position.x += -dir.x * moonMoveSpeed / 2;
+        moon.position.y += -dir.y * moonMoveSpeed / 2;
+    }
 
+}
 
 
 
