@@ -151,8 +151,8 @@ function moveTowardsMouseOnPointerMove(e){
     const dir = distanceVector.normalized();
 
     //TODO: MOVE IT TO MOUSE MOVEMENT DIRECTION
-    moon.position.x += dir.x * moonMoveSpeed * 2.5; 
-    moon.position.y += dir.y * moonMoveSpeed * 2.5;
+    moon.position.x += dir.x * moonMoveSpeed * deltaTime; 
+    moon.position.y += dir.y * moonMoveSpeed * deltaTime;
 
     //We need to set boundaries of movement
 }
@@ -162,10 +162,10 @@ function moonBackToOriginalPos(){
     const dir = distance.normalized();
     
     //If moon is not in the middle of the screen:
-    if (moon.position.x !== appMiddle.x && moon.position.y !== appMiddle.y ){
-        moon.position.x += -dir.x * moonMoveSpeed;
-        moon.position.y += -dir.y * moonMoveSpeed;
-    }
+    // if (moon.position.x !== appMiddle.x && moon.position.y !== appMiddle.y ){
+    //     moon.position.x += -dir.x * moonMoveSpeed;
+    //     moon.position.y += -dir.y * moonMoveSpeed;
+    // }
 
 }
 
