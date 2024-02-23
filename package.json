@@ -14,6 +14,7 @@
     "@pixi/graphics-extras": "^7.4.0",
     "@pixi/math": "^7.4.0",
     "@pixi/math-extras": "^7.4.0",
+    "@pixi/ui": "^0.10.5",
     "pixi-actions": "^1.1.10",
     "pixi.js": "^7.4.0"
   },

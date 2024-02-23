@@ -1,4 +1,5 @@
 import * as PIXI from 'pixi.js';
+import * as PIXIUI from '@pixi/ui';
 import '@pixi/graphics-extras';
 import '@pixi/math';
 import '@pixi/math-extras';
@@ -52,8 +53,9 @@ const app = new Application({
 let deltaTime = app.ticker.deltaTime;
 const appMiddle = {x: app.screen.width * 0.5,y: app.screen.height * 0.5}
 //Sprite References:
+const moonContainer = new PIXI.Container();
 const moon = PIXI.Sprite.from('./Assets/moon.png')
-const moonShadow = PIXI.Sprite.from('./Assets/moon.png')
+const moonBackground = PIXI.Sprite.from('./Assets/moon.png')
 const moonShadowGreen = PIXI.Sprite.from('./Assets/moon.png')
 const starsBGTexture = PIXI.Texture.from('./Assets/bgblack.png')
 const starsSprite = new PIXI.TilingSprite(starsBGTexture,app.screen.width,app.screen.height);
@@ -111,11 +113,11 @@ function SetMoon(){
     moon.scale.set(1,1);
     moon.filters = [blurFilter];
     
-    moonShadow.anchor.set(0.5);
-    moonShadow.scale.set(1,1);
-    moonShadow.position.set(appMiddle.x, appMiddle.y);
-    moonShadow.tint = 0xA020F0;
-    moonShadow.filters = [blurFilter];
+    moonBackground.anchor.set(0.5);
+    moonBackground.scale.set(1,1);
+    moonBackground.position.set(appMiddle.x, appMiddle.y);
+    moonBackground.tint = 0xA020F0;
+    moonBackground.filters = [blurFilter];
 
     moonShadowGreen.anchor.set(0.5);
     moonShadowGreen.scale.set(1,1);
@@ -124,6 +126,9 @@ function SetMoon(){
     moonShadowGreen.alpha = 0.6;
     moonShadowGreen.filters = [blurFilter];
 
+    moonContainer.addChild(moonBackground);
+    moonContainer.addChild(moonShadowGreen);
+    moonContainer.addChild(moon);
 }
 SetMoon();
 
@@ -133,7 +138,8 @@ starsSprite.tileScale.set(0.8,0.8);
 
 //#endregion
 
-//#region Text
+//#region Text and Button Animations
+
 const style = new PIXI.TextStyle({
     dropShadow: true,
     dropShadowAlpha: 0.4,
@@ -148,31 +154,35 @@ const style = new PIXI.TextStyle({
     stroke: "#98108d",
     strokeThickness: 1
 });
-const myText = new PIXI.Text('STUDIO AERIA', style);
+const PlayButtonText = new PIXI.Text('STUDIO AERIA', style);
+const textBackground = new Graphics();
+textBackground.beginFill(0xFFFFFF).lineStyle(2,0x000000,1)
+.drawRect(appMiddle.x - 250, appMiddle.y - 25, 500, 50)
+.endFill();
 
-myText.anchor.set(0.5);
-myText.position.set(appMiddle.x,appMiddle.y);
-myText.skew.set(0.2,0);
-//TO-DO:Move the text slightly a bit upward and reset it.
-//ACTIONS: TICK -> new file?
-app.ticker.add((delta) => Actions.tick(delta/60));
-myText.eventMode = 'static';
-myText.on('pointerover', textOnPointOver);
-myText.on('pointerout', textOnPointOut);
-myText.on('pointerdown', textOnPointDown);
-myText.on('pointerup', textOnPointUp);
+//BUTTON SETTINGS
+PlayButtonText.anchor.set(0.5);
+PlayButtonText.position.set(appMiddle.x,appMiddle.y);
+PlayButtonText.skew.set(0.2,0);
 
+//Anim Variables
 let offSetMyText = 10;
 let textAnimationSpeed = 0.1;
-const originalTextPosition = new Vector2(myText.position.x, myText.position.y);
+const originalTextPosition = new Vector2(PlayButtonText.position.x, PlayButtonText.position.y);
+
+//EVENTS
+app.ticker.add((delta) => Actions.tick(delta/60));
+
 function textOnPointOver(){
-    Actions.scaleTo(myText, 1.1, 1.1, textAnimationSpeed, Interpolations.linear).play();
-    Actions.moveTo(myText, myText.position.x - offSetMyText, myText.position.y - offSetMyText, textAnimationSpeed, Interpolations.linear).play();
+    Actions.scaleTo(PlayButtonText, 1.1, 1.1, textAnimationSpeed, Interpolations.linear).play();
+    Actions.moveTo(PlayButtonText, PlayButtonText.position.x - offSetMyText, PlayButtonText.position.y - offSetMyText, textAnimationSpeed, Interpolations.linear).play();
 }
 
 function textOnPointOut(){
-    Actions.scaleTo(myText, 1, 1, textAnimationSpeed, Interpolations.linear).play();
-    Actions.moveTo(myText, originalTextPosition.x,originalTextPosition.y, textAnimationSpeed, Interpolations.linear).play();
+
+    //See how to receive callback func from this actions event so that you could execute a code right after it.
+    Actions.scaleTo(PlayButtonText, 1, 1, textAnimationSpeed, Interpolations.linear).play();
+    Actions.moveTo(PlayButtonText, originalTextPosition.x,originalTextPosition.y, textAnimationSpeed, Interpolations.linear).play();
 }
 
 function textOnPointDown(){
@@ -181,24 +191,36 @@ function textOnPointDown(){
 
 function textOnPointUp(){
     this.alpha = 1;
+
+    //OnClick
+    warpSpeed = 1;
+    this.alpha = 0;
+    textBackground.alpha = 0;
 }
+
+
+PlayButtonText.eventMode = 'static';
+PlayButtonText.on('pointerover', textOnPointOver);
+PlayButtonText.on('pointerout', textOnPointOut);
+PlayButtonText.on('pointerdown', textOnPointDown);
+PlayButtonText.on('pointerup', textOnPointUp);
+
+
+
 
 //#endregion
 
 //#region Graphics
-const textBackground = new Graphics();
-textBackground.beginFill(0xFFFFFF)
-.drawRect(appMiddle.x - 250, appMiddle.y - 25, 500, 50)
-.endFill();
 
 //#endregion
 
-//#region Animations
+//#region Sprite Animations
 
 app.stage.eventMode = 'static';
 app.stage.addEventListener('pointermove', (e) => {
     moveTowardsMouseOnPointerMove(e);
 });
+
 
 //#region MOON ANIM
 const maxDistance = 500; 
@@ -216,8 +238,8 @@ function moveTowardsMouseOnPointerMove(e){
     };
 
     moonShadowLerpPosition = {
-        x: appMiddle.x + -dir.x * clampedLerpMagn * 0.5,
-        y: appMiddle.y + -dir.y * clampedLerpMagn * 0.5
+        x: appMiddle.x + -dir.x * clampedLerpMagn * 0.3,
+        y: appMiddle.y + -dir.y * clampedLerpMagn * 0.3
     };
 
     const lerpedPos = VectorLerp(appMiddle, moonLerpPosition, lerpTime);
@@ -230,6 +252,11 @@ function moveTowardsMouseOnPointerMove(e){
 //#endregion
 
 //#region Star Warp
+let warpingTimer;
+function TriggerStarWarp(timer){
+    warpSpeed = 1;
+    warpingTimer = timer;
+}
 
 function StarWarp(delta){
     // Simple easing. This should be changed to proper easing function when used for real.
@@ -262,6 +289,11 @@ function StarWarp(delta){
         star.sprite.rotation = Math.atan2(dyCenter, dxCenter) + Math.PI / 2;
     }
 }
+
+setInterval(() =>
+{
+    warpSpeed = warpSpeed > 0 ? 0 : 0;
+}, 5000);
 
 function randomizeStar(star, initial)
 {
@@ -300,11 +332,9 @@ for (let i = 0; i < starAmount; i++)
 }
 //#endregion
 
-app.stage.addChild(moonShadow);
-app.stage.addChild(moonShadowGreen);
-app.stage.addChild(moon);
+app.stage.addChild(moonContainer);
 app.stage.addChild(textBackground);
-app.stage.addChild(myText);
+app.stage.addChild(PlayButtonText);
 //#endregion
 
 
