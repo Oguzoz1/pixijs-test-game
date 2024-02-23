@@ -56,6 +56,7 @@ const appMiddle = {x: app.screen.width * 0.5,y: app.screen.height * 0.5}
 //Sprite References:
 const moon = PIXI.Sprite.from('./Assets/moon.png')
 const moonShadow = PIXI.Sprite.from('./Assets/moon.png')
+const moonShadowGreen = PIXI.Sprite.from('./Assets/moon.png')
 const starsBGTexture = PIXI.Texture.from('./Assets/bgblack.png')
 const starsSprite = new PIXI.TilingSprite(starsBGTexture,app.screen.width,app.screen.height);
 
@@ -82,17 +83,29 @@ function UpdateBackground(){
 
 //Sprite Settings:
 const blurFilter = new PIXI.BlurFilter(3);
+function SetMoon(){
+    moon.anchor.set(0.5);
+    moon.position.set(appMiddle.x,appMiddle.y);
+    moon.scale.set(1,1);
+    moon.filters = [blurFilter];
+    starsSprite.tileScale.set(0.8,0.8);
+    
+    moonShadow.anchor.set(0.5);
+    moonShadow.scale.set(1,1);
+    moonShadow.position.set(appMiddle.x, appMiddle.y);
+    moonShadow.tint = 0xA020F0;
+    moonShadow.filters = [blurFilter];
 
-moon.anchor.set(0.5);
-moon.position.set(appMiddle.x,appMiddle.y);
-moon.scale.set(1,1);
-moon.filters = [blurFilter];
-starsSprite.tileScale.set(0.8,0.8);
+    moonShadowGreen.anchor.set(0.5);
+    moonShadowGreen.scale.set(1,1);
+    moonShadowGreen.position.set(appMiddle.x, appMiddle.y);
+    moonShadowGreen.tint = 0x4DFFAF;
+    moonShadowGreen.alpha = 0.6;
+    moonShadowGreen.filters = [blurFilter];
 
-moonShadow.anchor.set(0.5);
-moonShadow.scale.set(1,1);
-moonShadow.position.set(appMiddle.x, appMiddle.y);
-moonShadow.tint = 0xA020F0;
+}
+SetMoon();
+
 
 //TEXT Settings:
 const style = new PIXI.TextStyle({
@@ -152,6 +165,7 @@ textBackground.beginFill(0xFFFFFF)
 
 app.stage.addChild(starsSprite);
 app.stage.addChild(moonShadow);
+app.stage.addChild(moonShadowGreen);
 app.stage.addChild(moon);
 app.stage.addChild(textBackground);
 app.stage.addChild(myText);
@@ -164,21 +178,29 @@ app.stage.addEventListener('pointermove', (e) => {
 //MOON ANIMATION:
 const maxDistance = 500; 
 const lerpTime = 0.025;
-let lerpPosition = {x: 0, y: 0};
+let moonLerpPosition = {x: 0, y: 0};
 
 function moveTowardsMouseOnPointerMove(e){
     const distanceVector = getDistanceVector(moon.position,e.global);
     const squaredMagn = distanceVector.magnitudeSquared();
     const dir = distanceVector.normalized();
     const clampedLerpMagn = Math.min(distanceVector.magnitude(), maxDistance);
-    lerpPosition = {
+    moonLerpPosition = {
         x: appMiddle.x + -dir.x * clampedLerpMagn,
         y: appMiddle.y + -dir.y * clampedLerpMagn
     };
 
-    const lerpedPos = VectorLerp(appMiddle, lerpPosition, lerpTime);
+    moonShadowLerpPosition = {
+        x: appMiddle.x + -dir.x * clampedLerpMagn * 0.5,
+        y: appMiddle.y + -dir.y * clampedLerpMagn * 0.5
+    };
+
+    const lerpedPos = VectorLerp(appMiddle, moonLerpPosition, lerpTime);
+    const lerpedPosShadow = VectorLerp(appMiddle, moonShadowLerpPosition, lerpTime);
     moon.position.x = lerpedPos.x;
     moon.position.y = lerpedPos.y;
+    moonShadowGreen.position.x = lerpedPosShadow.x;
+    moonShadowGreen.position.y = lerpedPosShadow.y;
 }
 
 
