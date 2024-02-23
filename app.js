@@ -1,20 +1,27 @@
 import * as PIXI from 'pixi.js';
 import '@pixi/graphics-extras';
+import '@pixi/math';
 import '@pixi/math-extras';
-import { Actions, Interpolations} from 'pixi-actions';
+import { Action, Actions, Interpolations} from 'pixi-actions';
 //Create an array of gameobjects (GameObject class=) to create an array and set anchor etc for all of them.
 
 //#region VECTOR FUNCTIONS
 function Vector2(x,y){
     this.x = x;
     this.y = y;
-
-    function Lerp(targetVector, destinationVector, time){
-        
-    }
+    
 } 
+function VectorLerp(from, to, t){
+    return new Vector2(
+        from.x * (1-t) + to.x * t,
+        from.y * (1-t) + to.y * t
+    );
+}
 Vector2.prototype.magnitude = function(){
     return Math.sqrt(this.x * this.x + this.y * this.y);
+}
+Vector2.prototype.magnitudeSquared = function(){
+    return this.x * this.x + this.y * this.y;
 }
 Vector2.prototype.normalized = function(){
     const magn = this.magnitude();
@@ -48,6 +55,7 @@ let deltaTime = app.ticker.deltaTime;
 const appMiddle = {x: app.screen.width * 0.5,y: app.screen.height * 0.5}
 //Sprite References:
 const moon = PIXI.Sprite.from('./Assets/moon.png')
+const moonShadow = PIXI.Sprite.from('./Assets/moon.png')
 const starsBGTexture = PIXI.Texture.from('./Assets/bgblack.png')
 const starsSprite = new PIXI.TilingSprite(starsBGTexture,app.screen.width,app.screen.height);
 
@@ -63,12 +71,11 @@ document.body.appendChild(app.view);
 app.ticker.add(delta => Update(delta));
 function Update(delta){ 
     UpdateBackground();
-    moonBackToOriginalPos();
 }
 
 //Update Methods:
 function UpdateBackground(){
-    starsSprite.tilePosition.x += 0.05;
+    starsSprite.tilePosition.x += 0.025;
 }
 
 
@@ -81,6 +88,11 @@ moon.position.set(appMiddle.x,appMiddle.y);
 moon.scale.set(1,1);
 moon.filters = [blurFilter];
 starsSprite.tileScale.set(0.8,0.8);
+
+moonShadow.anchor.set(0.5);
+moonShadow.scale.set(1,1);
+moonShadow.position.set(appMiddle.x, appMiddle.y);
+moonShadow.tint = 0xA020F0;
 
 //TEXT Settings:
 const style = new PIXI.TextStyle({
@@ -111,12 +123,17 @@ myText.on('pointerout', textOnPointOut);
 myText.on('pointerdown', textOnPointDown);
 myText.on('pointerup', textOnPointUp);
 
+let offsetmyTest = 10;
+let textAnimationSpeed = 0.25;
+const originalTextPosition = new Vector2(myText.position.x, myText.position.y);
 function textOnPointOver(){
-    Actions.scaleTo(myText, 1.1, 1.1, 0.2, Interpolations.linear).play();
+    Actions.scaleTo(myText, 1.1, 1.1, textAnimationSpeed, Interpolations.linear).play();
+    Actions.moveTo(myText, myText.position.x - offsetmyTest, myText.position.y - offsetmyTest, textAnimationSpeed, Interpolations.linear).play();
 }
 
 function textOnPointOut(){
-    Actions.scaleTo(myText, 1, 1, 0.2, Interpolations.linear).play();
+    Actions.scaleTo(myText, 1, 1, textAnimationSpeed, Interpolations.linear).play();
+    Actions.moveTo(myText, originalTextPosition.x,originalTextPosition.y, textAnimationSpeed, Interpolations.linear).play();
 }
 
 function textOnPointDown(){
@@ -134,6 +151,7 @@ textBackground.beginFill(0xFFFFFF)
 .endFill();
 
 app.stage.addChild(starsSprite);
+app.stage.addChild(moonShadow);
 app.stage.addChild(moon);
 app.stage.addChild(textBackground);
 app.stage.addChild(myText);
@@ -144,28 +162,23 @@ app.stage.addEventListener('pointermove', (e) => {
 });
 
 //MOON ANIMATION:
-const moonMoveSpeed = 0.2;
+const maxDistance = 500; 
+const lerpTime = 0.025;
+let lerpPosition = {x: 0, y: 0};
+
 function moveTowardsMouseOnPointerMove(e){
     const distanceVector = getDistanceVector(moon.position,e.global);
+    const squaredMagn = distanceVector.magnitudeSquared();
     const dir = distanceVector.normalized();
+    const clampedLerpMagn = Math.min(distanceVector.magnitude(), maxDistance);
+    lerpPosition = {
+        x: appMiddle.x + -dir.x * clampedLerpMagn,
+        y: appMiddle.y + -dir.y * clampedLerpMagn
+    };
 
-    //TODO: MOVE IT TO MOUSE MOVEMENT DIRECTION
-    moon.position.x += dir.x * moonMoveSpeed * deltaTime; 
-    moon.position.y += dir.y * moonMoveSpeed * deltaTime;
-
-    //We need to set boundaries of movement
-}
-
-function moonBackToOriginalPos(){
-    const distance = getDistanceVector(appMiddle, moon.position);
-    const dir = distance.normalized();
-    
-    //If moon is not in the middle of the screen:
-    // if (moon.position.x !== appMiddle.x && moon.position.y !== appMiddle.y ){
-    //     moon.position.x += -dir.x * moonMoveSpeed;
-    //     moon.position.y += -dir.y * moonMoveSpeed;
-    // }
-
+    const lerpedPos = VectorLerp(appMiddle, lerpPosition, lerpTime);
+    moon.position.x = lerpedPos.x;
+    moon.position.y = lerpedPos.y;
 }
 
 
@@ -183,6 +196,10 @@ function moonBackToOriginalPos(){
 
 
 //#region Code Dictionary
+//clamping:
+        // const angle = Math.atan2(distanceVector.x, distanceVector.y);
+        // moon.position.x = appMiddle.x + Math.cos(angle) * maxDistance;
+        // moon.position.y = appMiddle.y + Math.sin(angle) * maxDistance;
 
 // const rectangle = new Graphics();
 // rectangle.beginFill(0xAA33BB)
